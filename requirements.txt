@@ -3,3 +3,4 @@ streamlit~=1.40.0
 tensorflow~=2.16.2
 tensorflow_hub
 pandas~=2.2.2
+sentence_transformers
