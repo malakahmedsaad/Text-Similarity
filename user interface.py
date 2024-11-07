@@ -1,47 +1,35 @@
-import streamlit as st
+from sentence_transformers import SentenceTransformer
 import numpy as np
-import tensorflow_hub as hub
-import tensorflow as tf
+import streamlit as st
 
 
-# Load the Universal Sentence Encoder
-@st.cache_resource  # Cache the model to avoid reloading on every run
-def load_use_model():
-    model_url = "https://tfhub.dev/google/universal-sentence-encoder/4"
-
-    return hub.load(model_url)
+# Load the transformer model
+@st.cache_resource
+def load_transformer_model():
+    return SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
 
-embed = load_use_model()
+model = load_transformer_model()
 
+# Define functions
+def get_embeddings(texts):
+    return model.encode(texts)
 
-# Function to get embeddings
-def get_embedding(text):
-    embedding = embed([text])
-    return embedding.numpy()[0]
+def cosine_similarity(a, b):
+    return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
 
-
-# Function to calculate cosine similarity
-def cosine_similarity(embedding1, embedding2):
-    return np.dot(embedding1, embedding2) / (np.linalg.norm(embedding1) * np.linalg.norm(embedding2))
-
-
-# Streamlit UI setup
+# Streamlit UI
 st.title("Text Similarity Analyzer")
-st.write("Enter two texts below to find out their similarity score:")
-
-# User input for text
-text1 = st.text_area("Text 1", height=150)
-text2 = st.text_area("Text 2", height=150)
+text1 = st.text_area("Enter first text", "")
+text2 = st.text_area("Enter second text", "")
 
 if st.button("Calculate Similarity"):
     if text1 and text2:
-        # Get embeddings and compute similarity
-        embedding1 = get_embedding(text1)
-        embedding2 = get_embedding(text2)
-        similarity_score = cosine_similarity(embedding1, embedding2)
-
-        # Display the result
-        st.write(f"**Similarity Score:** {similarity_score:.2f}")
+        embeddings1 = get_embeddings([text1])[0]
+        embeddings2 = get_embeddings([text2])[0]
+        similarity = cosine_similarity(embeddings1, embeddings2)
+        st.write(f"Similarity Score: {similarity:.4f}")
     else:
-        st.write("Please enter both texts to calculate similarity.")
+        st.write("Please enter text in both fields.")
+
+#url: http://localhost:8501/
